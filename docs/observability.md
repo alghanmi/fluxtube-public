@@ -308,7 +308,8 @@ The `sync-grafana.ts` script in this repo takes care of pushing every JSON file 
 1. **Service account** in Grafana → Administration → Users and access → Service accounts → Add. Name: `fluxtube-sync`. Assign the **Editor** role on the org (or the fine-grained scopes: `dashboards:write`, `alert.rules:read`, `alert.rules:write`, `datasources:read`, `folders:read`).
 2. **Generate a token** under that service account. Save it.
 3. **Create the `fluxtube` folder** in Grafana → Dashboards → New → New folder → "fluxtube". The script looks up its UID by name; case-insensitive match with a diagnostic dump on failure.
-4. Hand `GRAFANA_API_URL` (e.g. `https://<stack>.grafana.net`) and `GRAFANA_API_TOKEN` to your deploy companion's secret-management flow. The companion's `deploy-on-release.yml` reads them.
+4. **Grant the service account Editor access on the `fluxtube` folder.** Open the folder → Folder actions → **Permissions** → Add → Service accounts → pick `fluxtube-sync` → role **Editor**. Org-level Editor doesn't automatically inherit on user-created folders in Grafana Cloud's RBAC model; if you skip this step the script fails with `Folder "fluxtube" not found` because the folder is invisible to the service account.
+5. Hand `GRAFANA_API_URL` (e.g. `https://<stack>.grafana.net`) and `GRAFANA_API_TOKEN` to your deploy companion's secret-management flow. The companion's `deploy-on-release.yml` reads them.
 
 ### Trying it locally
 
@@ -329,7 +330,7 @@ pnpm --filter @fluxtube/scripts sync-grafana
 |---|---|---|
 | "No Prometheus datasource found" | Grafana stack doesn't have a Prometheus datasource configured | Connections → Add new → Prometheus → point at the same Mimir endpoint you query interactively |
 | "Multiple Prometheus datasources found and none/multiple marked default" | Stack has >1 Prometheus DS and the `isDefault` heuristic can't disambiguate. Grafana Cloud's default setup (one metrics DS + `grafanacloud-usage`) is handled automatically because only the metrics DS is `isDefault`. | Set `GRAFANA_PROMETHEUS_DATASOURCE_UID` to the metrics DS's UID via your secret-management flow |
-| `Folder "fluxtube" not found` | The one-time folder wasn't created (or was renamed) | Recreate it; names are matched case-insensitively |
+| `Folder "fluxtube" not found` | Folder doesn't exist, OR the service account lacks permission to see it (the diagnostic prints the folders that ARE visible). | Create the folder OR grant the service account **Editor** on the existing folder via Folder actions → Permissions. Org-level Editor role doesn't auto-grant folder access in Grafana Cloud RBAC. |
 | `401 Unauthorized` | Token invalid or expired | Regenerate in Grafana, push the new token through your secret-management flow |
 | `403 Forbidden` on a specific endpoint | Token scopes incomplete | Re-check the scope list in step 1 |
 
