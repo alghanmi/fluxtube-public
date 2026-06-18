@@ -1,0 +1,49 @@
+# Local-dev only. Copy to `.dev.vars` (gitignored) and fill in real values
+# scoped to a development account, never production credentials.
+#
+# In production:
+#   - Secrets (the 5 below) come from `wrangler secret put` via
+#     scripts/sync-worker-secrets.sh, sourced from Bitwarden item
+#     "FluxTube / Worker Secrets / Production".
+#   - Non-secret vars (MINIFLUX_URL, CATEGORY_PLAYLIST_MAPPING, etc.) are set
+#     by Terraform as plain_text bindings; `wrangler deploy --keep-vars`
+#     preserves them across deploys.
+# See docs/secrets-management.md for the full model.
+
+# ── Secrets (always required locally) ─────────────────────────────────────────
+MINIFLUX_API_TOKEN="paste-miniflux-api-token-here"
+YOUTUBE_CLIENT_ID="paste-google-oauth-client-id-here"
+YOUTUBE_CLIENT_SECRET="paste-google-oauth-client-secret-here"
+YOUTUBE_REFRESH_TOKEN="paste-youtube-refresh-token-from-oauth-bootstrap-here"
+# Bearer token gating POST /sync and GET /audit — generate with `openssl rand -base64 32`.
+MANUAL_TRIGGER_TOKEN="paste-32-byte-random-token-here"
+
+# ── Non-secret vars (for local `wrangler dev` — production sets via Terraform) ─
+MINIFLUX_URL="https://reader.miniflux.app"
+# Each mapping entry may set `skip_shorts: true` to mark /shorts/ entries
+# read in Miniflux without ever adding them to the playlist. URL-based
+# detection only — Shorts that arrive as `/watch?v=` URLs slip through.
+CATEGORY_PLAYLIST_MAPPING='[{"category":"YouTube — Test","playlist_id":"PLxxxxxxxxxxxxxxxx","skip_shorts":true}]'
+SYNC_LOG_LEVEL="info"
+HEARTBEAT_URL=""
+# Optional per-reason Healthchecks ping URLs. Each one is a separate check;
+# the Worker pings the matching URL on FatalError with the matching reason
+# (HEARTBEAT_URL_AUTH for invalid_grant, HEARTBEAT_URL_QUOTA for quota_exhausted).
+# Leaving them empty keeps the original behavior (only HEARTBEAT_URL is pinged).
+HEARTBEAT_URL_AUTH=""
+HEARTBEAT_URL_QUOTA=""
+
+# Optional Grafana Cloud Loki log shipping. URL + USER are Text (non-secret);
+# TOKEN goes through wrangler secret put via scripts/sync-worker-secrets.sh.
+# All three must be set to enable shipping; missing any keeps the Worker on
+# stdout-only logging.
+GRAFANA_LOKI_URL=""
+GRAFANA_LOKI_USER=""
+GRAFANA_LOKI_TOKEN=""
+
+# Optional Grafana Cloud metrics shipping via OTLP/HTTP JSON. URL is the
+# OpenTelemetry endpoint (My Account → OpenTelemetry tile in Grafana Cloud);
+# the sink appends /v1/metrics if missing. All three required to enable.
+GRAFANA_OTLP_URL=""
+GRAFANA_OTLP_USER=""
+GRAFANA_OTLP_TOKEN=""

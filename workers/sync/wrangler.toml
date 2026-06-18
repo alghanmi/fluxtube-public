@@ -1,0 +1,54 @@
+name = "fluxtube-sync"
+main = "src/index.ts"
+compatibility_date = "2025-05-01"
+compatibility_flags = ["nodejs_compat"]
+
+# Expose the operator endpoints (`POST /sync`, `GET /audit` — see router.ts)
+# on the workers.dev subdomain. Auth is a Bearer token (`MANUAL_TRIGGER_TOKEN`);
+# there is no unauthenticated surface. Move to a custom domain later — see TODO.md.
+workers_dev = true
+
+# ── Build-time string substitution ────────────────────────────────────────────
+# wrangler replaces the bare identifier `VERSION` in the bundle at build time.
+# `deploy-sync.yml` overrides this on production deploys with the version from
+# `workers/sync/package.json`. The value here is the default for `wrangler dev`
+# and is also what the cloudflare/vitest-pool-workers test bundle sees.
+# See `src/globals.d.ts` for the matching TypeScript declaration.
+[define]
+VERSION = "\"0.0.0-dev\""
+
+# ── Cron trigger ──────────────────────────────────────────────────────────────
+# Default cadence. Terraform manages this in production via the
+# `cron_schedule` variable. Keep this value in sync with the variable to avoid
+# drift — `wrangler deploy` will set crons from this file on each push.
+[triggers]
+crons = ["*/30 * * * *"]
+
+# ── Non-secret vars ───────────────────────────────────────────────────────────
+# Vars are owned by Terraform (set as plain_text bindings on the script
+# resource from GitHub environment variables). The deploy workflow runs
+# `wrangler deploy --keep-vars` so wrangler never clobbers them.
+#
+# For local `wrangler dev`, put placeholder values in `.dev.vars` alongside
+# the secrets — wrangler dev loads vars and secrets identically from that
+# file.
+
+# ── D1 binding ────────────────────────────────────────────────────────────────
+# Terraform sets the real production binding via `d1_database_binding` on the
+# `cloudflare_workers_script` resource (see infrastructure/terraform/_modules/
+# fluxtube-environment/worker.tf). The value below is an all-zeros placeholder
+# so the file parses; production deploys ignore it.
+#
+# For local `wrangler dev --remote`: copy this file to a personal
+# `wrangler.local.toml` (gitignored), drop in your dev D1 UUID, and run
+# `wrangler dev --remote --config wrangler.local.toml`. Don't commit the real
+# UUID — it identifies a specific tenant's resource.
+[[d1_databases]]
+binding = "DB"
+database_name = "fluxtube"
+database_id = "00000000-0000-0000-0000-000000000000"
+migrations_dir = "migrations"
+
+# ── Logs ──────────────────────────────────────────────────────────────────────
+[observability]
+enabled = true

@@ -1,0 +1,44 @@
+name: PR checks
+
+on:
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pr-checks-${{ github.head_ref || github.run_id }}
+  cancel-in-progress: true
+
+jobs:
+  checks:
+    name: Typecheck, lint, test, audit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: pnpm/action-setup@v6
+        with:
+          run_install: false
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '22'
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Type check
+        run: pnpm --filter @fluxtube/sync typecheck
+
+      - name: Lint
+        run: pnpm --filter @fluxtube/sync lint
+
+      - name: Test
+        run: pnpm --filter @fluxtube/sync test
+
+      # Mirror deploy-sync.yml's audit gate so a PR that adds a HIGH+ CVE
+      # surfaces here instead of blocking a deploy later.
+      - name: Audit dependencies
+        run: pnpm audit --audit-level=high
