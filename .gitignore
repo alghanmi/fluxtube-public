@@ -1,0 +1,59 @@
+# ── Node ──────────────────────────────────────────────────────────────────────
+node_modules/
+*.log
+npm-debug.log*
+pnpm-debug.log*
+.pnpm-store/
+
+# Build artifacts
+dist/
+build/
+.tsbuildinfo
+*.tsbuildinfo
+
+# Coverage
+coverage/
+.nyc_output/
+
+# ── Wrangler / Cloudflare Workers ─────────────────────────────────────────────
+.wrangler/
+.dev.vars
+.dev.vars.*
+!.dev.vars.example
+
+# ── Terraform ─────────────────────────────────────────────────────────────────
+.terraform/
+.terraform.lock.hcl
+*.tfstate
+*.tfstate.*
+*.tfstate.backup
+crash.log
+crash.*.log
+
+# Local tfvars: never commit. Example is committed.
+*.tfvars
+*.tfvars.json
+!*.tfvars.example
+
+# Terraform plan output
+*.tfplan
+
+# ── Editors / OS ──────────────────────────────────────────────────────────────
+.DS_Store
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# ── Env ───────────────────────────────────────────────────────────────────────
+.env
+.env.*
+!.env.example
+
+# ── Bitwarden / local credentials ─────────────────────────────────────────────
+client_secret*.json
+*-credentials.json
+
+# ── Claude Code local state ───────────────────────────────────────────────────
+.claude/
