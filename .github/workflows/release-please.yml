@@ -24,6 +24,12 @@ permissions:
 jobs:
   release-please:
     runs-on: ubuntu-latest
+    # `environment: production` is needed for the dispatch step to see
+    # DEPLOY_DISPATCH_TOKEN — the secret lives at the environment scope,
+    # not the repo scope, so a job without an environment binding resolves
+    # it to an empty string. (release-please-action itself doesn't need it;
+    # the GITHUB_TOKEN it reads is always available.)
+    environment: production
     steps:
       - id: release
         uses: googleapis/release-please-action@v4
