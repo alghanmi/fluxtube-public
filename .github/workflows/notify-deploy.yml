@@ -1,19 +1,25 @@
-name: Notify deploy
+name: Notify deploy (manual)
 
-# Fires a repository_dispatch event at alghanmi/fluxtube-deploy whenever a
-# release is published in this repo. The dispatch payload carries the
-# version, commit sha, actor, and ref so the deploy workflow can stamp
-# metrics + log lines with attribution back to the public release.
+# Manual escape hatch for firing a deploy-release dispatch.
 #
-# Auth: secrets.DEPLOY_DISPATCH_TOKEN — a fine-scoped PAT with
-# `repository_dispatch:write` on alghanmi/fluxtube-deploy ONLY. This is
-# the entire auth surface this public repo holds. Compromise would let an
-# attacker fire a redeploy of an already-released version; it cannot push
-# arbitrary code (that requires merging on this repo).
+# Why this isn't on `release: [published]`: when release-please cuts a
+# release using GITHUB_TOKEN, GitHub's anti-recursion safeguard suppresses
+# the downstream `release` event. So `on: release` would never fire. The
+# auto-dispatch is now wired directly inside release-please.yml.
+#
+# This workflow stays around as a manual entrypoint for cases like:
+#   - re-running a stuck deploy
+#   - deploying an older tag
+#   - testing the dispatch chain without cutting a new release
 
 on:
-  release:
-    types: [published]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Tag to deploy (e.g. v0.1.0)'
+        required: true
+        default: 'v0.1.0'
+        type: string
 
 permissions:
   contents: read
@@ -26,13 +32,11 @@ jobs:
       - name: Send repository_dispatch
         env:
           GH_TOKEN: ${{ secrets.DEPLOY_DISPATCH_TOKEN }}
-          TAG: ${{ github.event.release.tag_name }}
+          TAG: ${{ inputs.tag }}
           SHA: ${{ github.sha }}
           ACTOR: ${{ github.actor }}
         run: |
           set -euo pipefail
-          # Strip leading "v" so the version stamped onto metrics is "0.1.0",
-          # not "v0.1.0". The ref keeps the v-prefixed form for git operations.
           version="${TAG#v}"
           gh api repos/alghanmi/fluxtube-deploy/dispatches \
             -f event_type=deploy-release \
@@ -44,7 +48,5 @@ jobs:
             echo "### Dispatched deploy-release"
             echo "- version: \`${version}\`"
             echo "- ref: \`${TAG}\`"
-            echo "- sha: \`${SHA}\`"
-            echo "- actor: @${ACTOR}"
             echo "- target: alghanmi/fluxtube-deploy"
           } >> "$GITHUB_STEP_SUMMARY"

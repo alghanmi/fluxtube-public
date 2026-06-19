@@ -5,9 +5,13 @@ name: release-please
 # entry, and bumps the version in package.json + workers/sync/package.json
 # (the latter via `extra-files` in release-please-config.json).
 #
-# Merging the release PR fires `release: published` → notify-deploy.yml
-# sends a repository_dispatch to alghanmi/fluxtube-deploy → that workflow
-# runs the actual deploy.
+# When release-please cuts a release in the same run, this workflow ALSO
+# fires the deploy-release `repository_dispatch` event at fluxtube-deploy.
+# Chaining the dispatch inside this workflow (rather than via a separate
+# `on: release: [published]` workflow) is the documented workaround for
+# GitHub's anti-recursion safeguard: releases created by GITHUB_TOKEN don't
+# fire downstream workflow events. By doing the dispatch here we get the
+# same end-to-end automation without needing a PAT for release creation.
 
 on:
   push:
@@ -21,6 +25,31 @@ jobs:
   release-please:
     runs-on: ubuntu-latest
     steps:
-      - uses: googleapis/release-please-action@v4
+      - id: release
+        uses: googleapis/release-please-action@v4
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Dispatch deploy-release event to fluxtube-deploy
+        if: ${{ steps.release.outputs.release_created == 'true' }}
+        env:
+          GH_TOKEN: ${{ secrets.DEPLOY_DISPATCH_TOKEN }}
+          VERSION: ${{ steps.release.outputs.version }}
+          TAG: ${{ steps.release.outputs.tag_name }}
+          SHA: ${{ steps.release.outputs.sha }}
+          ACTOR: ${{ github.actor }}
+        run: |
+          set -euo pipefail
+          gh api repos/alghanmi/fluxtube-deploy/dispatches \
+            -f event_type=deploy-release \
+            -f "client_payload[version]=${VERSION}" \
+            -f "client_payload[sha]=${SHA}" \
+            -f "client_payload[actor]=${ACTOR}" \
+            -f "client_payload[ref]=${TAG}"
+          {
+            echo "### Dispatched deploy-release"
+            echo "- version: \`${VERSION}\`"
+            echo "- ref: \`${TAG}\`"
+            echo "- sha: \`${SHA}\`"
+            echo "- target: alghanmi/fluxtube-deploy"
+          } >> "$GITHUB_STEP_SUMMARY"
