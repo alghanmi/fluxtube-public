@@ -28,6 +28,9 @@ jobs:
   dispatch:
     name: Dispatch deploy-release event
     runs-on: ubuntu-latest
+    # `environment: production` is required so the dispatch step can resolve
+    # DEPLOY_DISPATCH_TOKEN — same reason release-please.yml carries it.
+    environment: production
     steps:
       - name: Send repository_dispatch
         env:
