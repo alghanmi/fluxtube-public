@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.1.1](https://github.com/alghanmi/fluxtube-public/compare/v0.1.0...v0.1.1) (2026-06-19)
+
+
+### Bug Fixes
+
+* **grafana:** push dashboards into the fluxtube folder, not General ([#4](https://github.com/alghanmi/fluxtube-public/issues/4)) ([b6bcacc](https://github.com/alghanmi/fluxtube-public/commit/b6bcacc3b13d75e0f4961ed08716e307aa0e373d))
+* **release:** chain deploy dispatch into release-please workflow ([#3](https://github.com/alghanmi/fluxtube-public/issues/3)) ([5aa5c21](https://github.com/alghanmi/fluxtube-public/commit/5aa5c21f712a987dd934049c2d5746bf4b44f449))
+
 ## 0.1.0 (2026-06-19)
 
 
