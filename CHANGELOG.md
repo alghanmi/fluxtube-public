@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.1.2](https://github.com/alghanmi/fluxtube-public/compare/v0.1.1...v0.1.2) (2026-06-19)
+
+
+### Bug Fixes
+
+* **release:** pin notify-deploy job to production environment ([#8](https://github.com/alghanmi/fluxtube-public/issues/8)) ([b9111cd](https://github.com/alghanmi/fluxtube-public/commit/b9111cd45fb40dda92ccb3cab4f390548987afde))
+* **release:** pin release-please job to production environment ([#6](https://github.com/alghanmi/fluxtube-public/issues/6)) ([3342212](https://github.com/alghanmi/fluxtube-public/commit/3342212b1ec86856d8628adaee83f56f710da37d))
+
 ## [0.1.1](https://github.com/alghanmi/fluxtube-public/compare/v0.1.0...v0.1.1) (2026-06-19)
 
 
