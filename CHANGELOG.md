@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.2.0](https://github.com/alghanmi/fluxtube/compare/v0.1.2...v0.2.0) (2026-06-21)
+
+
+### Features
+
+* **oauth:** switch oauth-bootstrap to hosted callback ([#11](https://github.com/alghanmi/fluxtube/issues/11)) ([270ed35](https://github.com/alghanmi/fluxtube/commit/270ed35656c2f45278d4a2e2ad5de595560978f3))
+* **site:** add OAuth callback page + privacy + terms ([#10](https://github.com/alghanmi/fluxtube/issues/10)) ([1a56339](https://github.com/alghanmi/fluxtube/commit/1a56339931f74fbdac66556190a6dbe8bde2ab56))
+* **site:** scaffold fluxtube.forklabs.cc landing ([#9](https://github.com/alghanmi/fluxtube/issues/9)) ([8fe5272](https://github.com/alghanmi/fluxtube/commit/8fe5272f2243f52c80f646fcb1640c820929183b))
+
 ## [0.1.2](https://github.com/alghanmi/fluxtube-public/compare/v0.1.1...v0.1.2) (2026-06-19)
 
 
