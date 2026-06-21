@@ -209,7 +209,7 @@ The Workers free tier's 10ms CPU limit is irrelevant here — almost all wall ti
 | The deploy companion (private) | The values Terraform consumes (CF account ID, R2 bucket, etc.), the secrets the Worker reads, the deploy workflow that stitches it all together |
 | Terraform HCL (here, applied from the deploy companion) | All Cloudflare resources: D1, Worker script, cron trigger, plain_text bindings |
 | Wrangler (`wrangler deploy --keep-vars`, run by the deploy companion's workflow) | The Worker's JS bundle. `--keep-vars` means Terraform's plain_text bindings survive every deploy |
-| `scripts/oauth-bootstrap.ts` (here, local-only) | Runs the YouTube OAuth loopback flow, prints the refresh token (or JSON-encodes it via `--json` for an auto-refresh script in the deploy companion to capture) |
+| `scripts/oauth-bootstrap.ts` (here, local-only) | Runs the YouTube OAuth flow via the hosted callback at `https://fluxtube.forklabs.cc/oauth/callback`; the operator pastes the code back from that page. Prints the refresh token (or JSON-encodes it via `--json` for an auto-refresh script in the deploy companion to capture). |
 
 Nothing sensitive is ever committed to this repository or persisted on disk after a script run completes.
 
