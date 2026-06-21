@@ -1,0 +1,173 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+
+const lastUpdated = '2026-06-20';
+---
+
+<BaseLayout
+  title="Terms of Service"
+  description="The terms under which FluxTube is provided as open-source software you self-host."
+>
+  <main>
+    <div class="container narrow">
+      <p class="label">fluxtube.forklabs.cc</p>
+      <h1>Terms of Service</h1>
+      <p class="muted updated">Last updated: <time datetime={lastUpdated}>{lastUpdated}</time></p>
+
+      <section>
+        <h2>The short answer</h2>
+        <p>
+          FluxTube is open-source software released under the MIT license. There is no hosted
+          service. The "Terms of Service" you're reading exist primarily because the YouTube Data
+          API verification process requires that the OAuth client point at a published terms page.
+          The substance is: you self-host, you operate it, no warranty.
+        </p>
+      </section>
+
+      <section>
+        <h2>What FluxTube is</h2>
+        <p>
+          FluxTube is software for syncing your own unread Miniflux entries into your own YouTube
+          playlists. It is distributed as source code at
+          <a href="https://github.com/alghanmi/fluxtube">github.com/alghanmi/fluxtube</a>.
+        </p>
+        <p>
+          There is no FluxTube SaaS, no shared infrastructure, no central server. Every deployment
+          of FluxTube is independent: someone clones the repo, configures it against their own
+          accounts, and deploys it to their own Cloudflare account.
+        </p>
+      </section>
+
+      <section>
+        <h2>Self-hosted use</h2>
+        <p>By deploying FluxTube to your own infrastructure, you agree that:</p>
+        <ul>
+          <li>You are solely responsible for the operation of your instance.</li>
+          <li>
+            You are solely responsible for compliance with the
+            <a href="https://developers.google.com/youtube/terms/api-services-terms-of-service"
+              >YouTube API Services Terms of Service</a
+            >, the
+            <a href="https://policies.google.com/privacy">Google Privacy Policy</a>, and the terms
+            of any Miniflux instance you connect to.
+          </li>
+          <li>
+            You will use FluxTube only against YouTube accounts and Miniflux accounts you personally
+            control, and not on behalf of others without their explicit consent.
+          </li>
+          <li>
+            You will not use FluxTube to bypass YouTube's quotas, terms, or rate limits in a manner
+            that violates Google's Developer Policies.
+          </li>
+          <li>
+            You understand that your YouTube Data API quota is your own; FluxTube does not pool
+            quota across users.
+          </li>
+        </ul>
+      </section>
+
+      <section>
+        <h2>Source code license</h2>
+        <p>
+          FluxTube source code is released under the
+          <a href="https://github.com/alghanmi/fluxtube/blob/main/LICENSE">MIT license</a>. That
+          license governs the use, modification, and redistribution of the code. The license text
+          takes precedence over these Terms for matters of code rights and warranty disclaimers.
+        </p>
+      </section>
+
+      <section>
+        <h2>No warranty</h2>
+        <p>
+          FluxTube is provided "as is", without warranty of any kind, express or implied, including
+          but not limited to the warranties of merchantability, fitness for a particular purpose,
+          and noninfringement. The author is not liable for any claim, damages, or other liability
+          arising from the use of the software — including but not limited to data loss, API quota
+          exhaustion, YouTube account actions, or Miniflux state corruption.
+        </p>
+        <p>
+          This mirrors the MIT license. In plainer language: if FluxTube does the wrong thing with
+          your playlists or marks the wrong entries read, you wear the consequences. Audit the code
+          before you give it write access to your accounts.
+        </p>
+      </section>
+
+      <section>
+        <h2>The marketing page</h2>
+        <p>
+          This page (<code>fluxtube.forklabs.cc</code>) is a static site published for
+          discoverability and to satisfy the Google OAuth verification requirements (a terms page
+          and privacy policy at a verified domain). Using this page does not create a service
+          relationship between you and the author.
+        </p>
+      </section>
+
+      <section>
+        <h2>Changes</h2>
+        <p>
+          The "Last updated" date at the top of this page changes when the terms change. The full
+          revision history is available via Git on the
+          <a href="https://github.com/alghanmi/fluxtube">FluxTube source repository</a> for this page.
+        </p>
+      </section>
+
+      <section>
+        <h2>Contact</h2>
+        <p>
+          Questions about these terms: <a href="mailto:alghanmi@gmail.com">alghanmi@gmail.com</a>.
+          Source and issue tracker:
+          <a href="https://github.com/alghanmi/fluxtube">github.com/alghanmi/fluxtube</a>.
+        </p>
+      </section>
+
+      <footer class="footer">
+        <p class="subtle">
+          <a href="/">fluxtube.forklabs.cc</a> · <a href="/privacy">privacy</a> ·
+          <a href="https://forklabs.cc">forklabs.cc</a>
+        </p>
+      </footer>
+    </div>
+  </main>
+</BaseLayout>
+
+<style>
+  .narrow {
+    padding-block: var(--space-16) var(--space-12);
+  }
+
+  h1 {
+    margin-block-start: var(--space-3);
+  }
+
+  .updated {
+    font-size: var(--size-sm);
+    margin-block-end: var(--space-10);
+  }
+
+  section {
+    padding-block: var(--space-8);
+    border-bottom: 1px solid var(--color-line);
+  }
+
+  section h2 {
+    font-size: var(--size-xl);
+    margin-block: 0 var(--space-4);
+  }
+
+  section p {
+    color: var(--color-fg-muted);
+  }
+
+  section ul {
+    color: var(--color-fg-muted);
+  }
+
+  section ul li {
+    margin-block: var(--space-2);
+  }
+
+  .footer {
+    padding-block: var(--space-10);
+    border-bottom: 0;
+  }
+</style>

@@ -1,0 +1,296 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+---
+
+<BaseLayout
+  title="OAuth Callback"
+  description="Google has redirected here with a temporary OAuth code. Copy it back to your terminal to complete the flow."
+>
+  <main>
+    <div class="container narrow">
+      <p class="label">fluxtube.forklabs.cc</p>
+      <h1>OAuth callback</h1>
+
+      <noscript>
+        <div class="error">
+          <strong>JavaScript is required on this page.</strong>
+          <p>
+            This page reads the OAuth response from the URL and displays it for you to paste into
+            your terminal. It does that with a tiny script and no network calls. Enable JavaScript
+            for <code>fluxtube.forklabs.cc</code> and reload.
+          </p>
+        </div>
+      </noscript>
+
+      <div id="container" hidden>
+        <!-- Success block (filled by inline script). -->
+        <section id="success" hidden>
+          <h2>Authentication code received</h2>
+          <p class="muted">
+            Paste this into the terminal running <code>oauth-bootstrap</code>, then press Enter.
+          </p>
+
+          <div class="code-block">
+            <code id="code-value" class="code-value">…</code>
+            <button id="copy-btn" type="button" class="copy-btn" aria-live="polite">
+              Copy code
+            </button>
+          </div>
+
+          <details class="state-row">
+            <summary>State (verify this matches what your terminal printed)</summary>
+            <code id="state-value" class="mono small">…</code>
+          </details>
+
+          <p class="muted small">
+            You can close this tab once your terminal confirms the token exchange succeeded.
+          </p>
+        </section>
+
+        <!-- Error block. -->
+        <section id="error" hidden>
+          <h2>Google returned an error</h2>
+          <div class="error">
+            <p>
+              <strong>Error code:</strong>
+              <code id="error-code" class="mono">…</code>
+            </p>
+            <p id="error-desc" class="muted">…</p>
+          </div>
+
+          <h3>Likely causes</h3>
+          <ul class="muted">
+            <li>
+              <code>access_denied</code> — you clicked "Cancel" instead of "Allow" on the Google consent
+              screen. Re-run <code>oauth-bootstrap</code> to try again.
+            </li>
+            <li>
+              <code>invalid_client</code> — the <code>YOUTUBE_CLIENT_ID</code> in your local
+              <code>.dev.vars</code> doesn't match a real OAuth client. Check the Google Cloud Console
+              (APIs &amp; Services → Credentials).
+            </li>
+            <li>
+              <code>redirect_uri_mismatch</code> — Google Cloud's "Authorized redirect URIs" list doesn't
+              include <code>https://fluxtube.forklabs.cc/oauth/callback</code>. Add it under the
+              OAuth 2.0 Client ID configuration.
+            </li>
+            <li>
+              <code>admin_policy_enforced</code> — a Google Workspace admin has restricted OAuth grants
+              for your account. Out of FluxTube's reach to fix.
+            </li>
+          </ul>
+        </section>
+
+        <!-- Nothing to display: no code, no error. -->
+        <section id="empty" hidden>
+          <h2>Nothing to show</h2>
+          <p class="muted">
+            You probably landed here by clicking a stale link or refreshing after the code was
+            already used.
+          </p>
+          <p class="muted">
+            To start a new OAuth flow, run
+            <code>./scripts/sync-worker-secrets.sh production --refresh-youtube-token</code>
+            from your local checkout of
+            <a href="https://github.com/alghanmi/fluxtube">FluxTube</a>.
+          </p>
+        </section>
+      </div>
+
+      <footer class="footer">
+        <p class="subtle">
+          <a href="/">fluxtube.forklabs.cc</a> · <a href="/privacy">privacy</a> ·
+          <a href="/terms">terms</a>
+        </p>
+      </footer>
+    </div>
+  </main>
+</BaseLayout>
+
+<script is:inline>
+  // Read OAuth response off the URL and route to the right view.
+  // Inline + no-import so the page is fully usable even on hostile networks
+  // that block JS imports. No network calls; no analytics.
+
+  (function () {
+    const params = new URLSearchParams(window.location.search);
+    const code = params.get('code');
+    const state = params.get('state') || '';
+    const errorCode = params.get('error');
+    const errorDesc = params.get('error_description');
+
+    const container = document.getElementById('container');
+    if (container) container.hidden = false;
+
+    if (errorCode) {
+      const errSection = document.getElementById('error');
+      const errCodeEl = document.getElementById('error-code');
+      const errDescEl = document.getElementById('error-desc');
+      if (errSection) errSection.hidden = false;
+      if (errCodeEl) errCodeEl.textContent = errorCode;
+      if (errDescEl) errDescEl.textContent = errorDesc || '(no description from Google)';
+      return;
+    }
+
+    if (!code) {
+      const emptySection = document.getElementById('empty');
+      if (emptySection) emptySection.hidden = false;
+      return;
+    }
+
+    const successSection = document.getElementById('success');
+    const codeEl = document.getElementById('code-value');
+    const stateEl = document.getElementById('state-value');
+    const copyBtn = document.getElementById('copy-btn');
+
+    if (successSection) successSection.hidden = false;
+    if (codeEl) codeEl.textContent = code;
+    if (stateEl) stateEl.textContent = state || '(none — your CLI did not send a state)';
+
+    if (copyBtn) {
+      copyBtn.addEventListener('click', async function () {
+        try {
+          await navigator.clipboard.writeText(code);
+          copyBtn.textContent = 'Copied ✓';
+          copyBtn.classList.add('copied');
+          setTimeout(function () {
+            copyBtn.textContent = 'Copy code';
+            copyBtn.classList.remove('copied');
+          }, 2000);
+        } catch (e) {
+          copyBtn.textContent = 'Copy failed — select manually';
+        }
+      });
+    }
+  })();
+</script>
+
+<style>
+  .narrow {
+    padding-block: var(--space-16) var(--space-12);
+  }
+
+  h1 {
+    margin-block-start: var(--space-3);
+    margin-block-end: var(--space-10);
+  }
+
+  section {
+    padding-block: var(--space-6);
+  }
+
+  section h2 {
+    font-size: var(--size-xl);
+    margin: 0 0 var(--space-4);
+  }
+
+  section h3 {
+    font-size: var(--size-lg);
+    margin-block: var(--space-8) var(--space-3);
+  }
+
+  .code-block {
+    display: flex;
+    align-items: center;
+    gap: var(--space-4);
+    flex-wrap: wrap;
+    background: var(--color-bg-elevated);
+    border: 1px solid var(--color-line);
+    border-radius: var(--radius);
+    padding: var(--space-5);
+    margin-block: var(--space-6);
+  }
+
+  .code-value {
+    flex: 1;
+    font-family: var(--font-mono);
+    font-size: var(--size-md);
+    word-break: break-all;
+    background: transparent;
+    border: 0;
+    padding: 0;
+    color: var(--color-fg);
+    user-select: all;
+  }
+
+  .copy-btn {
+    background: var(--color-fg);
+    color: var(--color-bg);
+    border: 0;
+    border-radius: var(--radius);
+    padding: var(--space-3) var(--space-5);
+    font-family: var(--font-sans);
+    font-size: var(--size-sm);
+    font-weight: 500;
+    cursor: pointer;
+    transition:
+      background var(--transition),
+      transform 80ms ease;
+  }
+
+  .copy-btn:hover {
+    background: var(--color-accent);
+  }
+
+  .copy-btn:active {
+    transform: scale(0.97);
+  }
+
+  .copy-btn.copied {
+    background: var(--color-accent);
+  }
+
+  .state-row {
+    margin-block: var(--space-6);
+    font-size: var(--size-sm);
+  }
+
+  .state-row summary {
+    cursor: pointer;
+    color: var(--color-fg-muted);
+    padding-block: var(--space-2);
+  }
+
+  .state-row code.small {
+    display: block;
+    padding-block-start: var(--space-2);
+    color: var(--color-fg-subtle);
+    background: transparent;
+    border: 0;
+    padding-inline: 0;
+    word-break: break-all;
+  }
+
+  .small {
+    font-size: var(--size-sm);
+  }
+
+  .error {
+    border: 1px solid var(--color-line);
+    border-left: 3px solid var(--color-accent);
+    background: var(--color-bg-elevated);
+    border-radius: var(--radius);
+    padding: var(--space-5);
+    margin-block: var(--space-4);
+  }
+
+  .error p {
+    margin: 0 0 var(--space-3);
+  }
+
+  .error p:last-child {
+    margin: 0;
+  }
+
+  ul {
+    color: var(--color-fg-muted);
+  }
+
+  ul li {
+    margin-block: var(--space-3);
+  }
+
+  .footer {
+    padding-block: var(--space-12);
+  }
+</style>
