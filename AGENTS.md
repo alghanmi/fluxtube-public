@@ -93,6 +93,20 @@ Pinned versions — don't drift without explicit instruction:
 │   ├── oauth-bootstrap.ts            # one-time YouTube OAuth (local-only)
 │   ├── sync-grafana.ts               # push dashboards + alerts to Grafana
 │   └── package.json
+├── site/                             # fluxtube.forklabs.cc — Astro static site
+│   ├── astro.config.mjs              # Astro 6.x, MDX, static output
+│   ├── package.json                  # @fluxtube/site
+│   ├── tsconfig.json
+│   ├── public/                       # robots.txt, .well-known/security.txt
+│   └── src/
+│       ├── layouts/BaseLayout.astro  # shared shell, OG + Twitter meta
+│       ├── styles/global.css         # design tokens (warm neutral, muted red accent)
+│       └── pages/
+│           ├── index.astro           # landing
+│           ├── 404.astro
+│           ├── privacy.astro         # required for Google OAuth verification
+│           ├── terms.astro           # required for Google OAuth verification
+│           └── oauth/callback.astro  # OAuth code receiver (vanilla is:inline JS)
 └── workers/sync/
     ├── package.json
     ├── tsconfig.json

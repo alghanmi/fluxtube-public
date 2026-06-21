@@ -1,0 +1,9 @@
+node_modules/
+dist/
+.astro/
+build/
+coverage/
+.wrangler/
+.pnpm-store/
+pnpm-lock.yaml
+CHANGELOG.md

@@ -1,0 +1,171 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+---
+
+<BaseLayout
+  title="FluxTube"
+  description="Sync unread YouTube entries from Miniflux into YouTube playlists. Mark them read when you've watched and removed them. Public source; deploy your own."
+>
+  <main>
+    <div class="container">
+      <header class="hero">
+        <p class="label">fluxtube.forklabs.cc</p>
+        <h1>FluxTube</h1>
+        <p class="lede">
+          A serverless sync job that bridges <a href="https://miniflux.app">Miniflux</a> with YouTube
+          playlists. Reads unread YouTube entries from your configured Miniflux categories, adds them
+          to the playlists you map, and marks them read once you've watched and removed them on YouTube.
+        </p>
+      </header>
+
+      <section class="block" aria-labelledby="what-heading">
+        <h2 id="what-heading"><span class="label">What it does</span></h2>
+        <p>
+          You already use Miniflux for RSS. YouTube channels publish RSS. You watch on YouTube — for
+          the offline downloads, the cross-device progress sync, the TV app. The missing piece is
+          getting unread items <em>into</em> a YouTube playlist without copying URLs by hand. That's FluxTube.
+        </p>
+        <p>
+          Categories map to playlists. The Worker runs on a cron tick (every 30 min by default),
+          adds anything new, and watches the playlist for what you've removed. Removed = watched =
+          marked read in Miniflux. The loop closes.
+        </p>
+      </section>
+
+      <section class="block" aria-labelledby="stack-heading">
+        <h2 id="stack-heading"><span class="label">Stack</span></h2>
+        <ul class="stack">
+          <li><span class="mono">Cloudflare Workers</span> · cron-triggered TypeScript</li>
+          <li><span class="mono">Cloudflare D1</span> · per-entry tracking state</li>
+          <li><span class="mono">YouTube Data API v3</span> · playlist reads + inserts</li>
+          <li><span class="mono">Miniflux REST API</span> · category reads + bulk mark-read</li>
+          <li>
+            <span class="mono">Healthchecks.io</span> · dead-man's-switch + typed failure routing
+          </li>
+          <li>
+            <span class="mono">Grafana Cloud</span> · structured logs (Loki) + metrics (Mimir / OTLP)
+          </li>
+          <li><span class="mono">Terraform</span> · everything; release-please owns versioning</li>
+        </ul>
+      </section>
+
+      <section class="block" aria-labelledby="run-heading">
+        <h2 id="run-heading"><span class="label">Run your own</span></h2>
+        <p>
+          FluxTube is single-tenant by design — no shared infrastructure, no accounts, no signups.
+          The whole sync is your Cloudflare Worker running against your YouTube account, your
+          Miniflux, your Healthchecks. The repo's <span class="mono">TODO.md</span> walks the bootstrap
+          top-to-bottom; about an evening end-to-end.
+        </p>
+        <div class="cta-row">
+          <a class="cta" href="https://github.com/alghanmi/fluxtube">Source on GitHub</a>
+          <a class="cta-secondary" href="https://github.com/alghanmi/fluxtube/blob/main/TODO.md"
+            >Bootstrap checklist</a
+          >
+        </div>
+      </section>
+
+      <footer class="footer">
+        <p class="subtle">
+          A project under <a href="https://forklabs.cc">forklabs.cc</a>. Built by
+          <a href="https://ramialghanmi.com">Rami AlGhanmi</a>.
+        </p>
+        <p class="subtle">
+          <a href="/privacy">privacy</a> · <a href="/terms">terms</a> ·
+          <a href="/.well-known/security.txt">security.txt</a>
+        </p>
+      </footer>
+    </div>
+  </main>
+</BaseLayout>
+
+<style>
+  .hero {
+    padding-block: var(--space-24) var(--space-12);
+    border-bottom: 1px solid var(--color-line);
+  }
+
+  .hero h1 {
+    margin-block-start: var(--space-3);
+    font-size: var(--size-3xl);
+  }
+
+  .lede {
+    margin-block-start: var(--space-6);
+    font-size: var(--size-md);
+    color: var(--color-fg-muted);
+    line-height: 1.6;
+    max-width: 56ch;
+  }
+
+  .block {
+    padding-block: var(--space-12);
+    border-bottom: 1px solid var(--color-line);
+  }
+
+  .block h2 {
+    margin: 0 0 var(--space-5);
+  }
+
+  .stack {
+    list-style: none;
+    padding: 0;
+    display: grid;
+    gap: var(--space-2);
+    color: var(--color-fg-muted);
+  }
+
+  .stack li {
+    font-size: var(--size-sm);
+  }
+
+  .cta-row {
+    display: flex;
+    gap: var(--space-4);
+    margin-block-start: var(--space-6);
+    flex-wrap: wrap;
+  }
+
+  .cta {
+    background: var(--color-fg);
+    color: var(--color-bg);
+    padding: var(--space-3) var(--space-6);
+    border-radius: var(--radius);
+    font-weight: 500;
+    transition:
+      background var(--transition),
+      color var(--transition);
+  }
+
+  .cta:hover {
+    background: var(--color-accent);
+    color: var(--color-bg);
+  }
+
+  .cta-secondary {
+    border: 1px solid var(--color-line);
+    color: var(--color-fg-muted);
+    padding: var(--space-3) var(--space-6);
+    border-radius: var(--radius);
+    font-weight: 500;
+    transition: border-color var(--transition);
+  }
+
+  .cta-secondary:hover {
+    border-color: var(--color-accent);
+    color: var(--color-accent);
+  }
+
+  .footer {
+    padding-block: var(--space-12) var(--space-16);
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: var(--space-4);
+  }
+
+  .footer p {
+    margin: 0;
+  }
+</style>

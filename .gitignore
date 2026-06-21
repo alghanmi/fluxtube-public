@@ -8,6 +8,7 @@ pnpm-debug.log*
 # Build artifacts
 dist/
 build/
+.astro/
 .tsbuildinfo
 *.tsbuildinfo
 
