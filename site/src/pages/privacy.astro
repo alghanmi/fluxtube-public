@@ -1,0 +1,222 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+
+const lastUpdated = '2026-06-20';
+---
+
+<BaseLayout
+  title="Privacy Policy"
+  description="How FluxTube handles your data — the short answer: it doesn't, because it runs only on your own infrastructure."
+>
+  <main>
+    <div class="container narrow">
+      <p class="label">fluxtube.forklabs.cc</p>
+      <h1>Privacy Policy</h1>
+      <p class="muted updated">Last updated: <time datetime={lastUpdated}>{lastUpdated}</time></p>
+
+      <section>
+        <h2>The short answer</h2>
+        <p>
+          FluxTube is a single-tenant, self-hosted piece of software. There is no
+          <em>FluxTube service</em> that collects data about you. The author runs his own instance against
+          his own YouTube account and his own Miniflux instance. You can run your own; the source is on
+          <a href="https://github.com/alghanmi/fluxtube">GitHub</a>.
+        </p>
+        <p>
+          The longer answer below is for the Google API verification process and for anyone curious
+          about the data flow.
+        </p>
+      </section>
+
+      <section>
+        <h2>What FluxTube does</h2>
+        <p>FluxTube is a serverless sync job that runs on Cloudflare Workers. It:</p>
+        <ul>
+          <li>
+            Reads unread RSS entries from configured Miniflux categories on the operator's Miniflux
+            instance.
+          </li>
+          <li>
+            Inserts the YouTube video URLs into YouTube playlists the operator has chosen, via the
+            YouTube Data API v3.
+          </li>
+          <li>
+            Watches each tracked playlist for videos the operator has removed (i.e. watched). When a
+            video disappears from the playlist, FluxTube marks the corresponding Miniflux entry as
+            read.
+          </li>
+        </ul>
+        <p>
+          That is the entire feature set. FluxTube does not download videos, does not comment, does
+          not subscribe, does not modify videos, does not upload, and does not interact with anyone
+          else's YouTube account.
+        </p>
+      </section>
+
+      <section>
+        <h2>Data accessed via the YouTube Data API</h2>
+        <p>
+          FluxTube uses the scope
+          <code>https://www.googleapis.com/auth/youtube</code>. The minimum subset of that scope it
+          exercises:
+        </p>
+        <ul>
+          <li>
+            <code>playlistItems.list</code> — to see what's currently in the operator's playlists.
+          </li>
+          <li>
+            <code>playlistItems.insert</code> — to add new videos from the configured RSS feeds.
+          </li>
+        </ul>
+        <p>
+          FluxTube never reads or modifies any other YouTube content: not the operator's
+          subscriptions, channels, watch history, comments, or uploads. It never touches another
+          user's data because the OAuth token grants access only to the operator's own account.
+        </p>
+      </section>
+
+      <section>
+        <h2>Where the data lives</h2>
+        <p>FluxTube has no central server. Every instance is the operator's own infrastructure:</p>
+        <ul>
+          <li>
+            <strong>Compute:</strong> the operator's Cloudflare Workers account. The code is the public
+            source — auditable.
+          </li>
+          <li>
+            <strong>Tracking state:</strong> the operator's Cloudflare D1 (SQLite) database. Schema is
+            documented in the repo. The only data stored is which RSS entries map to which YouTube playlist
+            items, plus timestamps.
+          </li>
+          <li>
+            <strong>OAuth refresh token:</strong> stored as a Cloudflare Worker secret on the operator's
+            account. Never transmitted anywhere outside Google's OAuth endpoints and the operator's Worker.
+          </li>
+          <li>
+            <strong>Logs and metrics:</strong> if the operator opts in by configuring Grafana Cloud, structured
+            logs and gauge metrics are shipped to the operator's Grafana Cloud tenant. Otherwise logs
+            stay in Cloudflare's stdout and are ephemeral. No logs or metrics are shipped to any other
+            party.
+          </li>
+        </ul>
+        <p>
+          The author of FluxTube does not have access to your instance's data, your OAuth tokens,
+          your D1 contents, your logs, or your metrics. There is no shared backend.
+        </p>
+      </section>
+
+      <section>
+        <h2>Third parties</h2>
+        <p>FluxTube communicates with exactly three external services:</p>
+        <ul>
+          <li>
+            <strong>YouTube Data API (Google)</strong> — to manage the operator's own playlists. Subject
+            to
+            <a href="https://policies.google.com/privacy">Google's Privacy Policy</a>.
+          </li>
+          <li>
+            <strong>Miniflux</strong> — whichever instance the operator points it at, using the operator's
+            own API token. Subject to whatever privacy policy that Miniflux instance follows.
+          </li>
+          <li>
+            <strong>Healthchecks.io</strong> — for the dead-man's-switch heartbeat. Only the run's success
+            or failure code is transmitted; never any RSS or YouTube content. Subject to
+            <a href="https://healthchecks.io/privacy/">Healthchecks.io's Privacy Policy</a>.
+          </li>
+        </ul>
+        <p>
+          No data about you is sold, shared, or transmitted to any other party. FluxTube does not
+          include analytics, advertising, or user-tracking SDKs.
+        </p>
+      </section>
+
+      <section>
+        <h2>This page (fluxtube.forklabs.cc)</h2>
+        <p>
+          The marketing page you're reading is a static site hosted on Cloudflare Pages. It does not
+          run analytics, does not set cookies, does not embed third-party trackers, and does not log
+          visitor IP addresses anywhere accessible to the site author. Cloudflare's edge handles
+          request routing and may retain access logs per
+          <a href="https://www.cloudflare.com/privacypolicy/">Cloudflare's policy</a>.
+        </p>
+        <p>
+          The <a href="/oauth/callback">OAuth callback page</a> reads
+          <code>code</code> and <code>state</code> from the URL query string and displays them for the
+          operator to copy into their local terminal. No values from the URL are transmitted, stored,
+          or logged by this site.
+        </p>
+      </section>
+
+      <section>
+        <h2>Data retention and deletion</h2>
+        <p>
+          FluxTube does not retain any data about you, because it doesn't collect any. To stop
+          FluxTube from accessing your YouTube account, revoke its access at
+          <a href="https://myaccount.google.com/permissions">Google Account Permissions</a>. The
+          operator can then delete the OAuth refresh token from their Worker secrets and drop the D1
+          database.
+        </p>
+      </section>
+
+      <section>
+        <h2>Contact</h2>
+        <p>
+          The author of FluxTube is Rami AlGhanmi. For privacy questions, OAuth verification
+          queries, or anything else, email
+          <a href="mailto:alghanmi@gmail.com">alghanmi@gmail.com</a>. Source and issue tracker: <a
+            href="https://github.com/alghanmi/fluxtube">github.com/alghanmi/fluxtube</a
+          >.
+        </p>
+      </section>
+
+      <footer class="footer">
+        <p class="subtle">
+          <a href="/">fluxtube.forklabs.cc</a> · <a href="/terms">terms</a> ·
+          <a href="https://forklabs.cc">forklabs.cc</a>
+        </p>
+      </footer>
+    </div>
+  </main>
+</BaseLayout>
+
+<style>
+  .narrow {
+    padding-block: var(--space-16) var(--space-12);
+  }
+
+  h1 {
+    margin-block-start: var(--space-3);
+  }
+
+  .updated {
+    font-size: var(--size-sm);
+    margin-block-end: var(--space-10);
+  }
+
+  section {
+    padding-block: var(--space-8);
+    border-bottom: 1px solid var(--color-line);
+  }
+
+  section h2 {
+    font-size: var(--size-xl);
+    margin-block: 0 var(--space-4);
+  }
+
+  section p {
+    color: var(--color-fg-muted);
+  }
+
+  section ul {
+    color: var(--color-fg-muted);
+  }
+
+  section ul li {
+    margin-block: var(--space-2);
+  }
+
+  .footer {
+    padding-block: var(--space-10);
+    border-bottom: 0;
+  }
+</style>
