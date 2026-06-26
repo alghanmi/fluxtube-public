@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.3.0](https://github.com/alghanmi/fluxtube/compare/v0.2.0...v0.3.0) (2026-06-26)
+
+
+### Features
+
+* **brand:** man-page design system for fluxtube site ([#27](https://github.com/alghanmi/fluxtube/issues/27)) ([56ed1e6](https://github.com/alghanmi/fluxtube/commit/56ed1e61be12ce723387f87d47bf8141f61492d9))
+* **terraform:** migrate Cloudflare provider from ~&gt; 4.0 to ~&gt; 5.21 ([#29](https://github.com/alghanmi/fluxtube/issues/29)) ([66519ba](https://github.com/alghanmi/fluxtube/commit/66519ba7d5941fd96365406140b8f8d5734d2879))
+
 ## [0.2.0](https://github.com/alghanmi/fluxtube/compare/v0.1.2...v0.2.0) (2026-06-21)
 
 
