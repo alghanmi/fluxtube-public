@@ -41,13 +41,17 @@ locals {
 
 # The Worker script.
 #
-# Terraform owns: bindings (D1, plain_text vars) and metadata.
-# wrangler owns: the JS bundle (`content`) and module mode.
+# Ownership split:
+#   - Terraform owns:  bindings (D1, plain_text vars), metadata
+#                      (compatibility_date, compatibility_flags),
+#                      observability config.
+#   - wrangler owns:   the JS bundle (`content`) and entry-module name
+#                      (`main_module`) — see lifecycle.ignore_changes below.
 #
-# A placeholder script is written on first apply so the resource exists; the
-# `deploy-sync.yml` workflow then runs `wrangler deploy` to push the real code.
-# `lifecycle.ignore_changes` on `content` and `main_module` keeps Terraform from
-# reverting the wrangler-uploaded bundle on subsequent applies.
+# A placeholder script is written on first apply so the resource exists;
+# the `deploy-sync.yml` workflow then runs `wrangler deploy` to push the
+# real code. The lifecycle block keeps Terraform from reverting the
+# wrangler-uploaded bundle on subsequent applies.
 resource "cloudflare_workers_script" "sync" {
   account_id          = var.cloudflare_account_id
   script_name         = local.worker_name
@@ -71,11 +75,34 @@ resource "cloudflare_workers_script" "sync" {
     ],
   )
 
+  # Observability. Workers Logs + Tail capture every invocation; sampling
+  # stays at 1 (100%) since FluxTube's volume is tiny. Traces are off —
+  # we ship structured logs to Loki instead, and OTLP metrics to Mimir,
+  # so Workers-side traces don't add information. Persist on so the data
+  # is queryable in the Cloudflare dashboard, not just streamed.
+  observability = {
+    enabled            = true
+    head_sampling_rate = 1
+    logs = {
+      enabled            = true
+      head_sampling_rate = 1
+      invocation_logs    = true
+      persist            = true
+    }
+    traces = {
+      enabled            = false
+      head_sampling_rate = 1
+      persist            = true
+    }
+  }
+
   # `content` and `main_module` are wrangler's domain — Terraform writes a
   # placeholder on create, then wrangler deploys (with --keep-vars) push the
   # real bundle on every push to main. `compatibility_date` and
   # `compatibility_flags` must match what wrangler.toml sets or Cloudflare
-  # rejects metadata updates against the live bundle.
+  # rejects metadata updates against the live bundle. Everything else
+  # (bindings, observability) IS managed by Terraform — declared above
+  # rather than ignored, so the source of truth is auditable in HCL.
   lifecycle {
     ignore_changes = [
       content,
