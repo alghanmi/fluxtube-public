@@ -1,6 +1,6 @@
 {
   "name": "fluxtube",
-  "version": "0.4.0",
+  "version": "0.4.1",
   "private": true,
   "description": "Serverless sync between Miniflux and YouTube playlists.",
   "license": "MIT",
