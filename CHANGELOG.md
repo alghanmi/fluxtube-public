@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.4.1](https://github.com/alghanmi/fluxtube/compare/v0.4.0...v0.4.1) (2026-06-27)
+
+
+### Bug Fixes
+
+* **oauth-bootstrap:** route readline prompt to stderr in --json mode ([#35](https://github.com/alghanmi/fluxtube/issues/35)) ([0ff8a54](https://github.com/alghanmi/fluxtube/commit/0ff8a54cfbcb5c00cd0d1b018249200f32f80731))
+
 ## [0.4.0](https://github.com/alghanmi/fluxtube/compare/v0.3.0...v0.4.0) (2026-06-27)
 
 
