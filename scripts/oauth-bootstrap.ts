@@ -28,7 +28,7 @@
 
 import { randomBytes } from 'node:crypto';
 import * as readline from 'node:readline/promises';
-import { stdin as input, stdout as output } from 'node:process';
+import { stdin as input, stderr as output } from 'node:process';
 
 const SCOPE = 'https://www.googleapis.com/auth/youtube';
 const AUTH_URL = 'https://accounts.google.com/o/oauth2/v2/auth';
@@ -153,8 +153,13 @@ async function runHostedCallbackFlow(args: HostedFlowArgs): Promise<string> {
   log(`Verify the page shows this state value (CSRF check): ${args.expectedState}`);
   log('');
 
-  // Prompt stays on stdout (interactive use) even in --json mode — readline
-  // needs to talk to the terminal regardless of stdout redirection.
+  // Readline writes its prompt to `output`. We pin that to stderr (not
+  // stdout) so wrapper scripts using `$(... oauth-bootstrap -- --json)`
+  // get a clean stdout containing only the final JSON line — otherwise
+  // the prompt string ("Paste the code from the callback page: ") leaks
+  // into the captured value and trips the wrapper's `jq` parse.
+  // Interactive users see no difference: stderr and stdout both render
+  // on the TTY.
   const rl = readline.createInterface({ input, output });
   try {
     const pastedCode = (await rl.question('Paste the code from the callback page: ')).trim();
