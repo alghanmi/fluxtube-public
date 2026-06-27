@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.4.0](https://github.com/alghanmi/fluxtube/compare/v0.3.0...v0.4.0) (2026-06-27)
+
+
+### Features
+
+* **terraform:** declare observability + read_replication in HCL ([#31](https://github.com/alghanmi/fluxtube/issues/31)) ([f520a45](https://github.com/alghanmi/fluxtube/commit/f520a45de5fe7d2165ef9303ec5767e6cef79071))
+
 ## [0.3.0](https://github.com/alghanmi/fluxtube/compare/v0.2.0...v0.3.0) (2026-06-26)
 
 
