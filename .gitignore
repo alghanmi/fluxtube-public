@@ -25,9 +25,9 @@ coverage/
 # ── Terraform ─────────────────────────────────────────────────────────────────
 .terraform/
 .terraform.lock.hcl
-*.tfstate
-*.tfstate.*
-*.tfstate.backup
+# `*.tfstate*` catches the canonical names AND any manually-suffixed backup
+# (e.g. `pre-v5-state.tfstate-2.bak` from a provider-migration session).
+*.tfstate*
 crash.log
 crash.*.log
 

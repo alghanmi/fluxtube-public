@@ -115,21 +115,30 @@ resource "cloudflare_workers_script" "sync" {
 #
 # Renamed from v4's `cloudflare_worker_cron_trigger` (singular). The
 # `schedules` attribute also changed shape: v4 wanted a list of strings,
-# v5 wants a list of objects with a `cron` field. State migration for the
-# resource-type rename is documented in the PR description; the apply
-# expects the old state entry to have been imported under the new type
-# before this PR lands on main.
+# v5 wants a list of objects with a `cron` field.
+#
+# Kill switch: in v4, `count = 0` deleted the trigger via the CF API. In v5
+# the provider explicitly cannot destroy this resource type ("This resource
+# cannot be destroyed from Terraform. If you create this resource, it will
+# be present in the API until manually deleted." — provider warning). So
+# toggling `count` only removes terraform's view of it; the cron keeps
+# firing on Cloudflare.
+#
+# v5-shaped kill switch: leave the resource declared, drive `schedules` from
+# `var.cron_enabled`. An empty schedules list tells the API "no scheduled
+# invocations" — same operational effect as the v4 destroy, but without
+# fighting the provider's destroy ban.
 resource "cloudflare_workers_cron_trigger" "sync" {
-  # `count = 0` deletes the trigger entirely — used during repo cutovers to
-  # stop the old Worker from firing before the new one takes over, or to
-  # bring a Worker up with no cron during initial provisioning.
-  count = var.cron_enabled ? 1 : 0
-
   account_id  = var.cloudflare_account_id
   script_name = cloudflare_workers_script.sync.script_name
-  schedules = [
-    {
-      cron = var.cron_schedule
-    }
-  ]
+  schedules   = var.cron_enabled ? [{ cron = var.cron_schedule }] : []
+}
+
+# Address rename: dropping the `count` shifts the state key from
+# `…sync[0]` (count=1) to `…sync` (no index). The `moved` block tells
+# terraform to migrate the existing state entry to the new address
+# automatically — no `terraform state mv` operator step needed.
+moved {
+  from = cloudflare_workers_cron_trigger.sync[0]
+  to   = cloudflare_workers_cron_trigger.sync
 }
