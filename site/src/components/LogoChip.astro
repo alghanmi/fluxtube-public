@@ -1,0 +1,43 @@
+---
+/*
+ * 42×42 logo chip. Dark elevated background, 1px line, FluxTube SVG mark
+ * in the brightened on-dark accent. Used in the NAME hero row.
+ */
+---
+
+<span class="chip" aria-hidden="true">
+  <svg
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    stroke-width="1.7"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+  >
+    <rect x="4.5" y="6.5" width="15" height="13" rx="2.5"></rect>
+    <path d="M10.5 10.5 L15 13 L10.5 15.5 Z" fill="currentColor" stroke="none"></path>
+    <circle cx="6" cy="4" r="1.7" fill="currentColor" stroke="none"></circle>
+    <path d="M6 5.5 Q6 8 8.5 8" stroke-width="1.5"></path>
+  </svg>
+</span>
+
+<style>
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 42px;
+    height: 42px;
+    border-radius: 4px;
+    background: var(--color-bg-elevated);
+    border: 1px solid var(--color-line-strong);
+    color: var(--color-accent);
+    flex-shrink: 0;
+  }
+
+  .chip svg {
+    width: 24px;
+    height: 24px;
+    display: block;
+  }
+</style>

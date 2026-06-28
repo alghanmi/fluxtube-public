@@ -1,7 +1,9 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
+import LogoChip from '../components/LogoChip.astro';
+import SyncedStamp from '../components/SyncedStamp.astro';
+import Terminal from '../components/Terminal.astro';
 
-const today = new Date().toISOString().slice(0, 10);
 const version = '0.2.0';
 ---
 
@@ -14,103 +16,104 @@ const version = '0.2.0';
       <div class="manhead">
         <span class="manhead-left">fluxtube(1)</span>
         <span class="manhead-center">User Commands</span>
-        <span class="manhead-right">{today}</span>
+        <span class="manhead-right">fluxtube(1)</span>
       </div>
 
       <header class="hero">
-        <h1>
-          fluxtube<span class="hero-section">(1)</span><br />
-          <em>v{version}</em>
-        </h1>
+        <div class="hero-head">
+          <LogoChip />
+          <p class="eyebrow">Name</p>
+        </div>
+        <h1 class="hero-title">FluxTube</h1>
+        <p class="hero-lead">
+          A serverless sync job that bridges <em>Miniflux</em> with YouTube playlists. Reads unread RSS
+          entries from your Miniflux categories on a cron tick, adds them to mapped playlists, and marks
+          them read after you watch and remove them on YouTube.
+        </p>
+        <div class="stamp-slot" aria-hidden="true">
+          <SyncedStamp />
+        </div>
       </header>
 
-      <section aria-labelledby="name-h">
-        <h2 id="name-h" class="manh2">Name</h2>
-        <p class="name-line">
-          <span class="section-ref">fluxtube<span class="section-ref-num">(1)</span></span>
-          <span class="mdash">—</span>
-          sync unread Miniflux entries into YouTube playlists
-        </p>
-      </section>
+      <Terminal />
 
-      <section aria-labelledby="synopsis-h">
-        <h2 id="synopsis-h" class="manh2">Synopsis</h2>
-        <pre
-          class="synopsis"><span class="prompt">$</span> miniflux feed → fluxtube → youtube playlist <span class="op">→</span> you watch <span class="op">→</span> you remove → miniflux marks read</pre>
-      </section>
-
-      <section aria-labelledby="description-h">
+      <section aria-labelledby="description-h" class="section">
         <h2 id="description-h" class="manh2">Description</h2>
-        <p>
-          You already use Miniflux for RSS. YouTube channels publish RSS. You watch on YouTube — for
-          the offline downloads, the cross-device progress sync, the TV app. The missing piece is
-          getting unread items <em>into</em> a YouTube playlist without copying URLs by hand.
+        <p class="section-lead">
+          One run, two passes. <em>Pass 1 only adds. Pass 2 only removes.</em> Each pass is idempotent
+          — re-running mid-failure is safe.
         </p>
-        <p>
-          That's all <span class="mono">fluxtube</span> does. Categories map to playlists. A Cloudflare
-          Worker runs on a cron tick (every 30 min by default), adds anything new, and watches the playlist
-          for what you've removed. Removed equals watched equals marked read in Miniflux. <em
-            >The loop closes.</em
-          >
-        </p>
-      </section>
-
-      <section aria-labelledby="stack-h">
-        <h2 id="stack-h" class="manh2">Built with</h2>
-        <dl class="stack">
-          <div class="stack-row">
-            <dt>Compute</dt>
-            <dd>Cloudflare Workers, cron-triggered TypeScript</dd>
-          </div>
-          <div class="stack-row">
-            <dt>State</dt>
-            <dd>Cloudflare D1 — per-entry tracking, on the operator's account</dd>
-          </div>
-          <div class="stack-row">
-            <dt>APIs</dt>
-            <dd>YouTube Data API v3 · Miniflux REST</dd>
-          </div>
-          <div class="stack-row">
-            <dt>Observability</dt>
-            <dd>Healthchecks.io (dead-man's-switch + typed alerts) · optional Grafana Cloud</dd>
-          </div>
-          <div class="stack-row">
-            <dt>Deploy</dt>
-            <dd>Terraform · release-please · wrangler</dd>
-          </div>
-        </dl>
-      </section>
-
-      <section aria-labelledby="run-h">
-        <h2 id="run-h" class="manh2">Run your own</h2>
-        <p>
-          fluxtube is single-tenant by design — no shared infrastructure, no accounts, no signups.
-          The whole sync is your Cloudflare Worker running against your YouTube account, your
-          Miniflux, your Healthchecks. The repo's <span class="mono">TODO.md</span> walks the bootstrap
-          top-to-bottom; about an evening end-to-end.
-        </p>
-
-        <div class="cta-row">
-          <a class="cta cta-primary" href="https://github.com/alghanmi/fluxtube">
-            <span class="cta-label">source</span>
-            <span class="cta-target">github.com/alghanmi/fluxtube</span>
-          </a>
-          <a
-            class="cta cta-secondary"
-            href="https://github.com/alghanmi/fluxtube/blob/main/TODO.md"
-          >
-            <span class="cta-label">bootstrap</span>
-            <span class="cta-target">TODO.md</span>
-          </a>
+        <div class="pass-grid">
+          <article class="pass pass-1">
+            <h3 class="pass-label">Pass 1 · insert</h3>
+            <p class="pass-body">
+              For each unread Miniflux entry whose URL points at a YouTube video, call
+              <code>playlistItems.insert</code> on the mapped playlist and write a tracked-row to D1.
+              The D1 row keeps a per-entry ledger so Pass 2 knows what's already on the playlist.
+            </p>
+          </article>
+          <article class="pass pass-2">
+            <h3 class="pass-label">Pass 2 · reconcile</h3>
+            <p class="pass-body">
+              For each row in D1, ask YouTube whether the video is still on the playlist. If
+              <em>you removed the video</em> (watched and dismissed), mark the Miniflux entry read and
+              delete the D1 row. No video deletion is ever issued from this side.
+            </p>
+          </article>
         </div>
       </section>
 
-      <section aria-labelledby="see-also-h" class="see-also">
+      <section aria-labelledby="config-h" class="section">
+        <h2 id="config-h" class="manh2">Configuration</h2>
+        <p class="section-lead">
+          One file. A list of <em>category → playlist</em> pairs. Reload by re-deploying the Worker.
+        </p>
+        <pre
+          class="config-pre"><span class="cfg-comment"># category → playlist pairs (toml)</span>
+<span class="cfg-key">[[sync]]</span>
+category  = <span class="cfg-string">"tech"</span>
+playlist  = <span class="cfg-string">"PL_tech_watch_later"</span>
+<span class="cfg-key">[[sync]]</span>
+category  = <span class="cfg-string">"cycling"</span>
+playlist  = <span class="cfg-string">"PL_rides"</span></pre>
+      </section>
+
+      <section aria-labelledby="observability-h" class="section">
+        <h2 id="observability-h" class="manh2">Observability</h2>
+        <p class="section-lead">
+          A silent process needs loud logs. Four surfaces, layered: console, dead-man's-switch,
+          structured shipping, metrics.
+        </p>
+        <div class="obs-grid">
+          <div class="obs-cell">
+            <h3 class="obs-title">stdout JSON</h3>
+            <p class="obs-sub">always on · wrangler tail</p>
+          </div>
+          <div class="obs-cell">
+            <h3 class="obs-title">Healthchecks.io</h3>
+            <p class="obs-sub">cron dead-man's switch</p>
+          </div>
+          <div class="obs-cell">
+            <h3 class="obs-title">Grafana Loki</h3>
+            <p class="obs-sub">structured log shipping</p>
+          </div>
+          <div class="obs-cell">
+            <h3 class="obs-title">Grafana OTLP</h3>
+            <p class="obs-sub">11 gauges per run</p>
+          </div>
+        </div>
+      </section>
+
+      <section aria-labelledby="see-also-h" class="section see-also">
         <h2 id="see-also-h" class="manh2">See also</h2>
         <ul class="see-list" role="list">
           <li>
-            <a href="https://forklabs.cc">forklabs.cc</a>
-            <span class="see-note subtle">the other tools in the workshop</span>
+            <a href="https://github.com/alghanmi/fluxtube">github.com/alghanmi/fluxtube</a>
+            <span class="see-note subtle">source · MIT license · self-host the whole thing</span>
+          </li>
+          <li>
+            <a href="https://github.com/alghanmi/fluxtube/blob/main/TODO.md">TODO.md</a>
+            <span class="see-note subtle">bootstrap walk-through, about an evening end-to-end</span>
           </li>
           <li>
             <a href="https://miniflux.app">miniflux.app</a>
@@ -124,165 +127,212 @@ const version = '0.2.0';
             <a href="/terms">/terms</a>
             <span class="see-note subtle">MIT, you self-host, no warranty</span>
           </li>
-          <li>
-            <a href="/.well-known/security.txt">.well-known/security.txt</a>
-            <span class="see-note subtle">responsible disclosure</span>
-          </li>
         </ul>
       </section>
 
-      <div class="manhead manhead-foot">
-        <span class="manhead-left">fluxtube(1)</span>
-        <span class="manhead-center">User Commands</span>
-        <span class="manhead-right">{today}</span>
-      </div>
+      <footer class="site-foot">
+        <span class="site-foot-left">fluxtube.forklabs.cc</span>
+        <span class="site-foot-center">© 2026 · v{version}</span>
+        <a class="site-foot-right" href="https://forklabs.cc">↖ forklabs(7)</a>
+      </footer>
     </div>
   </main>
 </BaseLayout>
 
 <style>
+  /* ── Hero ──────────────────────────────────────────────────────────────── */
+
   .hero {
-    padding-block: var(--space-16) var(--space-12);
+    padding-block: 64px 36px;
+    position: relative;
+    animation: hero-fade-up 0.5s ease both;
   }
 
-  .hero h1 {
-    max-width: 14ch;
-    line-height: 0.95;
+  .hero-head {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 22px;
   }
 
-  .hero-section {
-    color: var(--color-fg-subtle);
-    font-size: 0.55em;
-    margin-inline-start: 0.05em;
-    vertical-align: 0.2em;
-    font-variation-settings:
-      'SOFT' 0,
-      'opsz' 36;
-  }
-
-  .name-line,
-  .synopsis {
+  .eyebrow {
     font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--color-accent);
+    margin: 0;
+    max-width: none;
+  }
+
+  .hero-title {
+    font-family: var(--font-display);
+    font-weight: 340;
+    font-size: clamp(2.8rem, 8vw, 4.8rem);
+    line-height: 1;
+    letter-spacing: -0.03em;
+    color: var(--color-fg);
+    font-variation-settings:
+      'SOFT' 100,
+      'WONK' 0,
+      'opsz' 144;
+    margin: 0;
+  }
+
+  .hero-lead {
+    margin-top: 22px;
+    max-width: 38rem;
+    font-size: 16px;
+    line-height: 1.6;
     color: var(--color-fg-muted);
-    max-width: var(--measure-wide);
+  }
+
+  .stamp-slot {
+    position: absolute;
+    top: 40px;
+    right: 4px;
+  }
+
+  @media (max-width: 640px) {
+    .stamp-slot {
+      position: static;
+      margin-top: 24px;
+    }
+  }
+
+  /* ── Sections ──────────────────────────────────────────────────────────── */
+
+  .section {
+    margin-top: var(--space-12);
+  }
+
+  .section-lead {
+    margin-top: var(--space-4);
+    color: var(--color-fg-muted);
+    max-width: 38rem;
     line-height: 1.6;
   }
 
-  .mdash {
-    color: var(--color-fg-subtle);
-    margin-inline: 0.25em;
-  }
+  /* ── Description / pass cards ──────────────────────────────────────────── */
 
-  .synopsis {
-    margin-block-start: var(--space-4);
-    padding: var(--space-4) var(--space-5);
-    background: var(--color-bg-elevated);
-    border: 1px solid var(--color-line-subtle);
-    border-radius: 2px;
-    overflow-x: auto;
-    white-space: pre;
-    font-size: var(--size-sm);
-  }
-
-  .prompt {
-    color: var(--color-accent);
-    font-weight: 600;
-    user-select: none;
-    margin-inline-end: 0.5ch;
-  }
-
-  .op {
-    color: var(--color-fg-subtle);
-  }
-
-  /* Stack list — same shape as the umbrella's project metadata block. */
-  .stack {
-    margin: var(--space-6) 0 0;
+  .pass-grid {
+    margin-top: var(--space-6);
     display: grid;
-    grid-template-columns: 1fr;
-    gap: var(--space-4);
+    grid-template-columns: 1fr 1fr;
+    gap: 18px;
+  }
+
+  @media (max-width: 640px) {
+    .pass-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .pass {
+    border: 1px solid var(--color-line);
+    border-left-width: 2px;
+    border-radius: 3px;
+    background: var(--color-bg-elevated);
+    padding: 22px;
+  }
+
+  .pass-1 {
+    border-left-color: var(--color-accent);
+  }
+
+  .pass-2 {
+    border-left-color: var(--color-green);
+  }
+
+  .pass-label {
     font-family: var(--font-mono);
-    font-size: var(--size-sm);
-  }
-
-  @media (min-width: 600px) {
-    .stack {
-      grid-template-columns: 9rem 1fr;
-      gap: var(--space-2) var(--space-6);
-    }
-    .stack-row {
-      display: contents;
-    }
-  }
-
-  .stack dt {
-    color: var(--color-fg-subtle);
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
     font-size: var(--size-xs);
-    padding-block-start: 0.2rem;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    margin: 0 0 var(--space-3);
   }
 
-  .stack dd {
+  .pass-1 .pass-label {
+    color: var(--color-accent);
+  }
+
+  .pass-2 .pass-label {
+    color: var(--color-green);
+  }
+
+  .pass-body {
     margin: 0;
     color: var(--color-fg-muted);
+    line-height: 1.65;
+    max-width: none;
   }
 
-  /* CTAs — two-line cards. Label on top, target underneath. The
-   * primary one shows the accent stamp; secondary is hairline. */
-  .cta-row {
-    display: flex;
-    gap: var(--space-4);
-    margin-block-start: var(--space-8);
-    flex-wrap: wrap;
+  .pass-body code {
+    color: var(--color-green);
   }
 
-  .cta {
-    display: inline-flex;
-    flex-direction: column;
-    gap: 0.15rem;
-    padding: var(--space-3) var(--space-5);
-    border-radius: 2px;
-    text-decoration: none;
+  /* ── Configuration TOML ────────────────────────────────────────────────── */
+
+  .config-pre {
+    margin-top: var(--space-6);
     font-family: var(--font-mono);
-    transition:
-      background var(--transition),
-      color var(--transition),
-      border-color var(--transition);
+    font-size: 12.5px;
+    color: var(--color-fg-muted);
+    background: var(--color-bg-elevated);
+    border: 1px solid var(--color-line);
+    border-radius: 4px;
+    padding: 20px 22px;
+    line-height: 1.8;
+    overflow-x: auto;
+    white-space: pre;
   }
 
-  .cta-primary {
-    background: var(--color-accent);
-    color: var(--color-bg);
+  .cfg-comment {
+    color: var(--color-fg-subtle);
+  }
+  .cfg-key {
+    color: var(--color-amber);
+  }
+  .cfg-string {
+    color: var(--color-green);
   }
 
-  .cta-primary:hover {
-    background: var(--color-accent-hover);
-    color: var(--color-bg);
+  /* ── Observability grid ────────────────────────────────────────────────── */
+
+  .obs-grid {
+    margin-top: var(--space-6);
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 12px;
   }
 
-  .cta-secondary {
-    border: 1px solid var(--color-line-strong);
+  .obs-cell {
+    border: 1px solid var(--color-line);
+    border-radius: 3px;
+    padding: 15px 16px;
+    background: var(--color-bg-elevated);
+  }
+
+  .obs-title {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    font-weight: 500;
     color: var(--color-fg);
+    margin: 0;
+    letter-spacing: 0.01em;
   }
 
-  .cta-secondary:hover {
-    border-color: var(--color-accent);
-    color: var(--color-accent);
+  .obs-sub {
+    margin: 4px 0 0;
+    font-size: 11px;
+    color: var(--color-fg-subtle);
+    max-width: none;
   }
 
-  .cta-label {
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
-    font-size: var(--size-xs);
-    opacity: 0.7;
-  }
+  /* ── See also ──────────────────────────────────────────────────────────── */
 
-  .cta-target {
-    font-size: var(--size-sm);
-  }
-
-  /* See also — same shape as the umbrella. */
   .see-also {
     padding-block-end: var(--space-8);
   }
@@ -322,10 +372,6 @@ const version = '0.2.0';
   }
 
   @media (max-width: 540px) {
-    .manhead {
-      font-size: 0.7rem;
-      letter-spacing: 0.06em;
-    }
     .see-list {
       grid-template-columns: 1fr;
       gap: var(--space-3);
@@ -334,6 +380,55 @@ const version = '0.2.0';
       display: flex;
       flex-direction: column;
       gap: var(--space-1);
+    }
+  }
+
+  /* ── Footer ────────────────────────────────────────────────────────────── */
+
+  .site-foot {
+    margin-top: 80px;
+    padding-block: 18px 56px;
+    border-top: 1px solid var(--color-line);
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: baseline;
+    gap: var(--space-4);
+    font-family: var(--font-mono);
+    font-size: 11.5px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--color-fg-subtle);
+  }
+
+  .site-foot-left {
+    text-align: left;
+  }
+
+  .site-foot-center {
+    text-align: center;
+    color: var(--color-fg-muted);
+  }
+
+  .site-foot-right {
+    text-align: right;
+    color: var(--color-fg-subtle);
+    text-decoration: none;
+    transition: color var(--transition);
+  }
+
+  .site-foot-right:hover {
+    color: var(--color-accent);
+  }
+
+  @media (max-width: 540px) {
+    .site-foot {
+      grid-template-columns: 1fr;
+      gap: 6px;
+      text-align: center;
+    }
+    .site-foot-left,
+    .site-foot-right {
+      text-align: center;
     }
   }
 </style>

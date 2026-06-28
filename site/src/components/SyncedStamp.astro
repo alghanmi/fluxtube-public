@@ -1,0 +1,41 @@
+---
+/*
+ * SYNCED rubber-stamp impression. Positioned absolutely by the hero
+ * section; this component just renders the chrome + the animation.
+ *
+ * Animates on load with a stamp-impact keyframe: starts scaled up at
+ * opacity 0, presses down through opacity 1 at scale .94, settles
+ * to opacity .85 at scale 1. Rotation stays at -7deg throughout so
+ * the tween reads as vertical force, not a spin.
+ *
+ * Reduced motion: the global override snaps the animation to its
+ * end-state (opacity .85, rotate(-7deg), scale 1). No extra rule
+ * needed here.
+ */
+---
+
+<span class="stamp" aria-label="synced">SYNCED</span>
+
+<style>
+  .stamp {
+    display: inline-block;
+    font-family: var(--font-display);
+    font-size: 15px;
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--color-accent);
+    border: 2.5px solid var(--color-accent);
+    border-radius: 6px;
+    padding: 9px 15px;
+    font-variation-settings:
+      'SOFT' 100,
+      'WONK' 0,
+      'opsz' 90;
+    transform: rotate(-7deg);
+    opacity: 0.85;
+    animation: stamp-impact 0.7s 0.5s cubic-bezier(0.2, 0.8, 0.3, 1) both;
+    transform-origin: center;
+    user-select: none;
+  }
+</style>
