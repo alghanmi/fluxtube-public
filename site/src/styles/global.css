@@ -1,33 +1,55 @@
 /* ─────────────────────────────────────────────────────────────────────────
  * fluxtube.forklabs.cc — design tokens
  *
- * Brand pass v2. Inherits the forklabs man-page vocabulary
- * (mono-dominant body, Fraunces display, paper-cream ground, faint
- * ruled-paper hairlines) and substitutes only one knob: the accent,
- * which is FluxTube's project-distinct color.
+ * Warm-terminal dark theme. The whole site reads like a Unix man page
+ * rendered in a vintage terminal: warm near-black ground, ink-stamp red
+ * brightened for legibility on dark, IBM Plex Mono carrying body text,
+ * Fraunces appearing only at display sizes.
  *
- * Accent: ink-stamp red `#933325`. Deep, slightly cooled red that
- * reads like a rubber stamp on cream stock. Nods at YouTube without
- * cosplaying as it.
+ * Why "warm terminal" instead of a generic dark theme: FluxTube is a
+ * silent process you only see through its logs. The aesthetic should
+ * be the wrangler-tail panel, not a marketing surface dressed in
+ * dark mode.
+ *
+ * Brand-red is `#933325` (ink-stamp); on this dark ground it's too
+ * low-contrast for body text, so the on-dark accent brightens to
+ * `#d65a42`. Both are kept as separate tokens — `--color-accent-brand`
+ * is the stamp-on-light value, `--color-accent` is the live on-dark one.
  * ──────────────────────────────────────────────────────────────────────── */
 
 :root {
   /* Ground + ink */
-  --color-bg: #f5f2eb;
-  --color-bg-elevated: #fbf8f1;
-  --color-bg-card: #ede7d8;
-  --color-fg: #1a1815;
-  --color-fg-muted: #4a443c;
-  --color-fg-subtle: #8a8478;
+  --color-bg: #14110d;
+  --color-bg-elevated: #1c1813;
+  --color-bg-card: #211c16;
+  --color-bg-terminal: #100d0a;
 
-  --color-line: #d4cdbc;
-  --color-line-strong: #b3aa97;
-  --color-line-subtle: #e6dfd0;
+  --color-fg: #ece4d6;
+  --color-fg-muted: #a89f8d;
+  --color-fg-subtle: #6f6757;
 
-  --color-accent: #933325;
-  --color-accent-hover: #6f261b;
-  --color-accent-soft: #f5e4e1;
+  /* Hairlines — varying density for layered structure. The dark
+   * theme reads with thinner, lower-contrast lines than the light
+   * theme so the panels don't feel boxed in. */
+  --color-line: #2c261d;
+  --color-line-strong: #3a3327;
+  --color-line-subtle: #221d15;
 
+  /* Accent. On-dark brightened red is the live value; brand-of-record
+   * stays available for the stamp-on-light contexts the master site uses
+   * inside its FluxTube card preview chip. */
+  --color-accent: #d65a42;
+  --color-accent-hover: #e8745c;
+  --color-accent-brand: #933325;
+  --color-accent-soft: #2a1c17;
+
+  /* Status colors — wrangler-tail vocabulary. Green = ok/healthy,
+   * amber = tick/TOML key, plus the accent for pass1/pass2 tags. */
+  --color-green: #9bbf6f;
+  --color-amber: #d8a657;
+
+  /* Type — same families as the forklabs umbrella; only the accent
+   * differs. Family resemblance across subdomains is the point. */
   --font-display:
     'Fraunces', 'Iowan Old Style', Charter, 'Source Serif Pro', Cambria, Georgia, serif;
   --font-mono:
@@ -59,7 +81,7 @@
 
   --measure: 36rem;
   --measure-wide: 48rem;
-  --container: 56rem;
+  --container: 60rem;
 
   --transition: 160ms cubic-bezier(0.2, 0, 0.2, 1);
 }
@@ -82,14 +104,16 @@ body {
 }
 
 html {
-  /* Ruled-paper hairlines, same density as forklabs.cc. */
+  /* Ruled-paper hairlines, faint warm white on the dark ground. Lighter
+   * density than the light theme — the dark version reads as cathode-ray
+   * scanlines, not paper, so the line spacing widens a touch (33px vs 31px). */
   background-color: var(--color-bg);
   background-image: repeating-linear-gradient(
     to bottom,
     transparent 0,
-    transparent 31px,
-    rgba(74, 68, 60, 0.04) 31px,
-    rgba(74, 68, 60, 0.04) 32px
+    transparent 33px,
+    rgba(236, 228, 214, 0.018) 33px,
+    rgba(236, 228, 214, 0.018) 34px
   );
 }
 
@@ -139,7 +163,7 @@ a {
   text-decoration: underline;
   text-decoration-thickness: 1px;
   text-underline-offset: 0.18em;
-  text-decoration-color: rgba(147, 51, 37, 0.4);
+  text-decoration-color: rgba(214, 90, 66, 0.4);
   transition:
     color var(--transition),
     text-decoration-color var(--transition);
@@ -219,10 +243,11 @@ pre {
 }
 
 code {
-  background: var(--color-bg-elevated);
-  padding: 0.08em 0.32em;
-  border: 1px solid var(--color-line-subtle);
+  background: var(--color-bg-terminal);
+  padding: 0.06em 0.3em;
+  border: 1px solid var(--color-line);
   border-radius: 2px;
+  color: var(--color-green);
 }
 
 pre {
@@ -238,6 +263,7 @@ pre code {
   background: transparent;
   border: none;
   padding: 0;
+  color: inherit;
 }
 
 hr {
@@ -320,7 +346,7 @@ main {
   color: var(--color-fg-muted);
   margin-block-start: var(--space-12);
   padding-block-end: var(--space-4);
-  border-bottom: 1px solid var(--color-line-subtle);
+  border-bottom: 1px solid var(--color-line);
 }
 
 /* ── Utility ─────────────────────────────────────────────────────────────── */
@@ -371,6 +397,60 @@ main {
 
 .section-ref-num {
   color: var(--color-fg-subtle);
+}
+
+/* ── Animations (cosmetic) ────────────────────────────────────────────────
+ *
+ * Hero entrance, SYNCED stamp impact, blinking terminal caret. All
+ * cosmetic — the page is fully legible static. Reduced-motion users get
+ * the final-state frame; see the override at the bottom. */
+
+@keyframes hero-fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes stamp-impact {
+  0% {
+    opacity: 0;
+    transform: rotate(-7deg) scale(1.6);
+  }
+  60% {
+    opacity: 1;
+    transform: rotate(-7deg) scale(0.94);
+  }
+  100% {
+    opacity: 0.85;
+    transform: rotate(-7deg) scale(1);
+  }
+}
+
+@keyframes caret-blink {
+  0%,
+  50% {
+    opacity: 1;
+  }
+  50.01%,
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes log-line-in {
+  from {
+    opacity: 0;
+    transform: translateY(2px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
