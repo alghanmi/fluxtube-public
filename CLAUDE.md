@@ -169,6 +169,17 @@ Auth surface: this repo holds **exactly one secret**, `DEPLOY_DISPATCH_TOKEN`, a
 - **Cron triggers fire at most once per minute.** Default is every 30 minutes.
 - **No `playlistItems.delete` calls** — the user removes videos from the playlist manually; that's the signal Pass 2 listens for.
 
+## OAuth bootstrap rotation gotchas
+
+When rotating the YouTube refresh token via the deploy companion's `sync-worker-secrets.sh --refresh-youtube-token` flow, the wrapper calls `pnpm --filter @fluxtube/scripts -s oauth-bootstrap -- --json` and parses the resulting JSON from stdout. Three things `scripts/oauth-bootstrap.ts` must keep right for that contract to hold:
+
+- **Web OAuth client type required, not Desktop.** The hosted callback (`https://fluxtube.forklabs.cc/oauth/callback`) cannot be registered on a Google Cloud "Desktop app" client — only "Web application" accepts HTTPS redirect URIs. If the credential in Bitwarden is a Desktop client, the consent flow returns `Error 400: redirect_uri_mismatch`. Create a new Web client in Cloud Console, copy the new ID + secret into `"FluxTube / Worker Secrets / Production"`, delete the old Desktop client.
+- **Authorized redirect URI must match exactly.** `https://fluxtube.forklabs.cc/oauth/callback` — scheme, host, path, case, trailing-slash all included. A mismatch on any character yields `redirect_uri_mismatch`. The same string is also baked into `scripts/oauth-bootstrap.ts` as `REDIRECT_URI`; keep the two in sync.
+- **`--json` mode reserves stdout for the final JSON line.** Wrapper scripts pipe stdout straight to `jq`, so anything else on stdout breaks the rotation flow:
+  - All progress/status output (`log` symbol) routes through `console.error` when `jsonMode` is true.
+  - `readline.createInterface` must be created with `output: process.stderr`, not stdout — otherwise the "Paste the code: " prompt leaks into the captured value and the wrapper's `jq` parser dies on it (real bug: PR #35).
+  - The final JSON is written via explicit `process.stdout.write(JSON.stringify({refresh_token}) + '\n')` — explicit, not `console.log`, so it's clear at the call site that this is the wrapper's payload.
+
 ## Non-goals
 
 Out of scope; will be rejected without a new requirements discussion:
